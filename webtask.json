@@ -1,0 +1,11 @@
+{
+  "title": "emailupdate",
+  "name": "emailupdate",
+  "version": "1.0.0",
+  "author": "CriGoT",
+  "description": "Provides a simple way for users to update their own e-mail address",
+  "type": "application",
+  "keywords": [
+    "auth0"
+  ]
+}

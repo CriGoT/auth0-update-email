@@ -1,0 +1,153 @@
+html
+  head
+    meta(charset='UTF-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=Edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    meta(name='description', content='#{description}')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel='shortcut icon', href='https://cdn.auth0.com/styleguide/2.0.1/lib/logos/img/favicon.png')
+    link(rel='apple-touch-icon', href='apple-touch-icon.png')
+
+    link(rel='stylesheet', type='text/css', href="https://cdn.auth0.com/styleguide/latest/index.css")
+
+    script(type='text/javascript', src='https://code.jquery.com/jquery-2.1.4.min.js')
+    script(type='text/javascript', src='https://fb.me/react-0.14.0.min.js')
+    script(type='text/javascript', src='https://fb.me/react-dom-0.14.0.js')
+    script(type='text/javascript', src='https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js')
+    script(type='text/javascript', src='https://cdn.auth0.com/js/jwt-decode-1.4.0.min.js')
+    script(type='text/javascript', src='https://cdn.auth0.com/js/navbar-1.0.1.min.js')
+    script(type='text/javascript', src='https://cdn.auth0.com/auth0/auth0-2.1.0.min.js')
+    script(type='text/javascript', src='https://cdn.auth0.com/js/lock-9.0.min.js')
+
+  body
+    header.dashboard-header
+      nav.navbar.navbar-default(role='navigation')
+        .container
+          .navbar-header
+            button.navbar-toggle(type='button', data-toggle='collapse', data-target='#navbar-collapse')
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            h1.navbar-brand
+              a(href='https://auth0.com')
+                span Auth0
+
+    .container.root-container
+      .row
+        #content.wrapper.col-xs-10
+    script(type='text/babel').
+      var Home = React.createClass({
+        showLock: function() {
+          this.props.lock.show();
+        },
+
+        render: function() {
+          return (
+          <div className="login-box auth0-box before">
+            <img src="https://i.cloudup.com/StzWWrY34s.png" />
+            <h3>Auth0 Example</h3>
+            <p>Zero friction identity infrastructure, built for developers</p>
+            <a onClick={this.showLock} className="btn btn-primary btn-lg btn-login btn-block">Sign In</a>
+          </div>);
+        }
+      });
+
+      var LoggedIn = React.createClass({
+        callApi: function() {
+
+        },
+
+        getInitialState: function() {
+          return {
+            profile: null
+          }
+        },
+
+        componentDidMount: function() {
+          this.props.lock.getProfile(this.props.idToken, function (err, profile) {
+            if (err) {
+              console.log("Error loading the Profile", err);
+              alert("Error loading the Profile");
+            }
+            this.setState({profile: profile});
+          }.bind(this));
+        },
+
+        render: function() {
+          if (this.state.profile) {
+            return (
+              <div>
+
+                <h2>Welcome {this.state.profile.name || this.state.profile.nickname}</h2>
+                <form className="form-horizontal">
+                    <div className="form-group">
+                      <label class="col-xs-3 control-label">Current E-Mail</label>
+                      <div className="col-xs-6">
+                        <input type="text" required readonly className="form-control" value={this.state.profile.email} />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label class="col-xs-3 control-label">New E-Mail</label>
+                      <div className="col-xs-6">
+                        <input type="text" className="form-control" value={this.state.profile.email} />
+                      </div>
+                    </div>
+                </form>
+                <button onClick={this.callApi} className="btn btn-lg btn-primary center-block">Update E-mail</button>
+              </div>);
+          } else {
+            return (
+              <div>
+                <h1 id="logo"><img src="https://cdn.auth0.com/blog/auth0_logo_final_blue_RGB.png" /></h1>
+              </div>);
+          }
+        }
+      });
+      var App = React.createClass({
+          componentWillMount: function() {
+            this.setupAjax();
+            this.createLock();
+            this.setState({idToken: this.getIdToken()})
+          },
+          createLock: function() {
+            this.lock = new Auth0Lock(this.props.clientId, this.props.domain);
+          },
+          setupAjax: function() {
+            $.ajaxSetup({
+              'beforeSend': function(xhr) {
+                if (localStorage.getItem('userToken')) {
+                  xhr.setRequestHeader('Authorization',
+                        'Bearer ' + localStorage.getItem('userToken'));
+                }
+              }
+            });
+          },
+          getIdToken: function() {
+            var idToken;
+            var authHash = this.lock.parseHash(window.location.hash);
+            if (!idToken && authHash) {
+              if (authHash.id_token) {
+                idToken = authHash.id_token
+                localStorage.setItem('userToken', authHash.id_token);
+              }
+              if (authHash.error) {
+                console.log("Error signing in", authHash);
+              }
+            }
+            return idToken;
+          },
+          render: function() {
+            if (this.state.idToken) {
+              return (<LoggedIn lock={this.lock} idToken={this.state.idToken} />);
+            } else {
+              return (<Home lock={this.lock} />);
+            }
+          }
+        });
+      const AUTH0_DOMAIN='crigot.auth0.com';
+      const AUTH0_CLIENT_ID='';
+      ReactDOM.render(
+        <App clientId={AUTH0_CLIENT_ID} domain={AUTH0_DOMAIN} />,
+        document.getElementById('content')
+      );
