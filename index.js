@@ -3,14 +3,13 @@ import Webtask  from 'webtask-tools'
 import template from './views/index.jade'
 import admin    from './routes/admin'
 import update   from './routes/updateemail'
+import unless   from 'express-unless'
 
 const app = express();
 
-app.use('/admin',admin);
+
 app.use('/updateemail',update);
-app.get('/',(req, res)=>
-{
-  res.redirect('/admin')
-});
+admin.unless = unless;
+app.use('/',admin.unless({path:'/updateemail*'}));
 
 export default app;
