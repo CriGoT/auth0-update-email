@@ -24,14 +24,8 @@ html
       nav.navbar.navbar-default(role='navigation')
         .container
           .navbar-header
-            button.navbar-toggle(type='button', data-toggle='collapse', data-target='#navbar-collapse')
-              span.sr-only Toggle navigation
-              span.icon-bar
-              span.icon-bar
-              span.icon-bar
-            h1.navbar-brand
-              a(href='https://auth0.com')
-                span Auth0
+            i.icon-budicon-781.icon.navbar-brand(aria-hidden="true",style="font-size:40px")
+            span.navbar-link(style="font-size:30px") E-Mail Update
 
     .container.root-container
       .row
@@ -82,13 +76,13 @@ html
                 <h2>Welcome {this.state.profile.name || this.state.profile.nickname}</h2>
                 <form className="form-horizontal">
                     <div className="form-group">
-                      <label class="col-xs-3 control-label">Current E-Mail</label>
+                      <label className="col-xs-3 control-label">Current E-Mail</label>
                       <div className="col-xs-6">
-                        <input type="text" required readonly className="form-control" value={this.state.profile.email} />
+                        <input type="text" required readOnly className="form-control" value={this.state.profile.email} />
                       </div>
                     </div>
                     <div className="form-group">
-                      <label class="col-xs-3 control-label">New E-Mail</label>
+                      <label className="col-xs-3 control-label">New E-Mail</label>
                       <div className="col-xs-6">
                         <input type="text" className="form-control" value={this.state.profile.email} />
                       </div>
