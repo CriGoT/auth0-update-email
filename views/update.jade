@@ -30,20 +30,24 @@ html
     .container.root-container
       .row
         #content.wrapper.col-xs-10
+
     script(type='text/babel').
       var Home = React.createClass({
         showLock: function() {
           this.props.lock.show();
         },
 
+        componentDidMount:function() {
+          this.showLock();
+        },
+
         render: function() {
           return (
-          <div className="login-box auth0-box before">
-            <img src="https://i.cloudup.com/StzWWrY34s.png" />
-            <h3>Auth0 Example</h3>
-            <p>Zero friction identity infrastructure, built for developers</p>
-            <a onClick={this.showLock} className="btn btn-primary btn-lg btn-login btn-block">Sign In</a>
-          </div>);
+            <div className="col-xs-6 col-xs-offset-3">
+              <p>To change your E-mail address you must authenticate.</p>
+              <a onClick={this.showLock} className="btn btn-primary btn-lg btn-login btn-block ">Sign In</a>
+            </div>
+          );
         }
       });
 
@@ -72,7 +76,6 @@ html
           if (this.state.profile) {
             return (
               <div>
-
                 <h2>Welcome {this.state.profile.name || this.state.profile.nickname}</h2>
                 <form className="form-horizontal">
                     <div className="form-group">
@@ -92,9 +95,8 @@ html
               </div>);
           } else {
             return (
-              <div>
-                <h1 id="logo"><img src="https://cdn.auth0.com/blog/auth0_logo_final_blue_RGB.png" /></h1>
-              </div>);
+                <div className="alert alert-danger">There was an error retrieving your information. Please, try again later or contact your administrator.</div>
+              );
           }
         }
       });
