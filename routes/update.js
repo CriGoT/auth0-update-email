@@ -85,7 +85,11 @@ export default function update(config) {
         })
         .catch((err)=>{
           console.log(err);
-          res.status(500).json({"name":"InternalError","code":"management_api_error","description":"The Managemente API returned an error while updating the user","statusCode":500});
+          if (err.statusCode===400){
+            res.status(400).json({"name":err.name,"code":"bad_api_request","description":err.message,"statusCode":400});
+          }else{
+            res.status(500).json({"name":"InternalError","code":"management_api_error","description":"The Managemente API returned an error while updating the user","statusCode":500});
+          }
         });
     }
   });
