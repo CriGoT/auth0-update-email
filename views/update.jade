@@ -34,7 +34,7 @@ html
     script(type='text/babel').
       var Home = React.createClass({
         showLock: function() {
-          this.props.lock.showSignin();
+          this.props.lock.showSignin({closable:false,rememberLastLogin:false,connections:[this.props.connection]});
         },
 
         componentDidMount:function() {
@@ -52,6 +52,18 @@ html
       });
       var timer;
       var LoggedIn = React.createClass({
+        getInitialState: function() {
+          return {
+            profile: null,
+            new_mail: null,
+            is_valid: false,
+            is_available: false,
+            changed: false,
+            working: false,
+            result: null,
+            error: null
+          }
+        },
 
         updateEmail: function() {
           var data = JSON.stringify({email:this.state.new_mail});
@@ -62,7 +74,8 @@ html
             is_available: true,
             changed: true,
             working: true,
-            });
+            result: null,
+            error: null});
           $.ajax({
             method: 'PATCH',
             url: this.props.apiUrl + '/me',
@@ -71,10 +84,28 @@ html
             contentType: 'application/json',
             cache: false})
           .then( result=>{
-            alert(result.message);
+            this.setState({
+              profile: this.state.profile,
+              new_mail: this.state.new_mail,
+              is_valid: true,
+              is_available: true,
+              changed: true,
+              working: true,
+              result: result.message,
+              error: null});
+            window.location.replace('#');
           },err =>{
             console.log(err);
-            alert(err.description);
+            this.setState({
+              profile: this.state.profile,
+              new_mail: this.state.new_mail,
+              is_valid: true,
+              is_available: true,
+              changed: true,
+              working: true,
+              result: null,
+              error: err.description});
+            window.location.replace('#');
           });
 
         },
@@ -99,7 +130,9 @@ html
                   is_valid: true,
                   is_available: result,
                   changed: true,
-                  working: false});
+                  working: false,
+                  result: null,
+                  error: null});
             },err =>{
               console.log(err);
               this.setState({
@@ -108,7 +141,9 @@ html
                 is_valid: true,
                 is_available: false,
                 changed: true,
-                working: false});
+                working: false,
+                result: null,
+                error: null});
             });
            }
         },
@@ -125,7 +160,9 @@ html
               is_valid: false,
               is_available: false,
               changed: false,
-              working: false});
+              working: false,
+              result: null,
+              error: null});
             return;
           }
 
@@ -138,21 +175,12 @@ html
               is_valid: valid,
               is_available: false,
               changed: changed,
-              working: valid && changed});
+              working: valid && changed,
+              result: null,
+              error: null});
 
           if (valid && changed) {
             timer = window.setTimeout(this.checkAvailability,350);
-          }
-        },
-
-        getInitialState: function() {
-          return {
-            profile: null,
-            new_mail: null,
-            is_valid: false,
-            is_available: false,
-            changed: false,
-            working: false
           }
         },
 
@@ -178,13 +206,32 @@ html
               <div className="form-group">
                 <label className="col-xs-3 control-label">New E-Mail</label>
                 <div className="col-xs-6">
-                  <input type="text" onChange={this.onMailChange} className="form-control" readOnly={this.state.is_available && this.state.working} value={this.state.new_mail} />
+                  <input type="text" onChange={this.onMailChange} className="form-control" readOnly={this.state.result || this.state.error || (this.state.is_available && this.state.working)} value={this.state.new_mail} />
                 </div>
               </div>
             </form>);
         },
 
         renderButton: function() {
+          if (this.state.result)
+            return(
+              <div className="alert alert-success">
+                <p>{this.state.result}</p>
+                <strong>For your security close the browser</strong>
+              </div>
+            );
+
+          if (this.state.error)
+          {
+            return(
+              <div className="alert alert-success">
+              <p>{this.state.error}</p>
+              <strong>For your security close the browser</strong>
+              </div>
+            );
+          }
+
+
           if (this.state.changed)
              if (this.state.is_valid)
                if (this.state.working)
@@ -229,8 +276,8 @@ html
       });
       var App = React.createClass({
           componentWillMount: function() {
-            this.setupAjax();
             this.createLock();
+            this.setupAjax();
             this.setState({idToken: this.getIdToken(),submitted:false})
           },
           createLock: function() {
@@ -238,22 +285,23 @@ html
           },
 
           setupAjax: function() {
-            $.ajaxSetup({
-              'beforeSend': function(xhr) {
-                if (localStorage.getItem('userToken')) {
-                  xhr.setRequestHeader('Authorization',
-                        'Bearer ' + localStorage.getItem('userToken'));
+            var id_token = this.getIdToken();
+            if (id_token)
+            {
+              $.ajaxSetup({
+                'beforeSend': function(xhr) {
+                    xhr.setRequestHeader('Authorization',
+                          'Bearer ' + id_token);
                 }
-              }
-            });
+              });
+            }
           },
           getIdToken: function() {
             var idToken;
             var authHash = this.lock.parseHash(window.location.hash);
-            if (!idToken && authHash) {
+            if (authHash) {
               if (authHash.id_token) {
-                idToken = authHash.id_token
-                localStorage.setItem('userToken', authHash.id_token);
+                idToken = authHash.id_token;
               }
               if (authHash.error) {
                 console.log("Error signing in", authHash);
@@ -265,14 +313,15 @@ html
             if (this.state.idToken) {
               return (<LoggedIn lock={this.lock} idToken={this.state.idToken} {...this.props} />);
             } else {
-              return (<Home lock={this.lock} />);
+              return (<Home lock={this.lock} {...this.props} />);
             }
           }
         });
-      const AUTH0_DOMAIN='#{config.AUTH0_DOMAIN}';
-      const AUTH0_CLIENT_ID='#{config.AUTH0_CLIENT_ID}';
-      const apiUrl = '#{baseUrl}/api';
+      var AUTH0_DOMAIN='#{config.AUTH0_DOMAIN}';
+      var AUTH0_CLIENT_ID='#{config.AUTH0_CLIENT_ID}';
+      var apiUrl = '#{baseUrl}/api';
+      var AUTH0_CONNECTION = '#{config.AUTH0_CONNECTION}'
       ReactDOM.render(
-        <App clientId={AUTH0_CLIENT_ID} domain={AUTH0_DOMAIN} apiUrl={apiUrl}/>,
+        <App clientId={AUTH0_CLIENT_ID} domain={AUTH0_DOMAIN} apiUrl={apiUrl} connection={AUTH0_CONNECTION}/>,
         document.getElementById('content')
       );
