@@ -19,13 +19,14 @@ module.exports = Request.get(LIST_MODULES_URL, { json: true }).then(function (da
       'express-unless':false,
       'webtask-tools': false
     });
+  extModules.auth0 ='auth0@2.1.0';
 
   return {
     entry: './webtask',
     output: {
       path: './build',
       filename: 'bundle.wt.js',
-      library: true,
+      library: 'webtask',
       libraryTarget: 'commonjs2',
     },
     module: {
