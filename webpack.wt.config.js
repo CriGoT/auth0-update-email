@@ -6,12 +6,25 @@ var LIST_MODULES_URL = 'https://webtask.it.auth0.com/api/run/wt-tehsis-gmail_com
 
 module.exports = Request.get(LIST_MODULES_URL, { json: true }).then(function (data) {
   var modules = data.modules;
+  var extModules = _(modules).reduce(function (acc, module) {
+        return _.set(acc, module.name, true);
+    }, {
+      // Not provisioned via verquire
+      'auth0-api-jwt-rsa-validation': true,
+      'auth0-authz-rules-api': true,
+      'auth0-oauth2-express': true,
+      'auth0-sandbox-ext': true,
+      'detective': true,
+      'sandboxjs': true,
+      'express-unless':false,
+      'webtask-tools': false
+    });
 
   return {
     entry: './webtask',
     output: {
       path: './build',
-      filename: 'bundle.js',
+      filename: 'bundle.wt.js',
       library: true,
       libraryTarget: 'commonjs2',
     },
@@ -28,18 +41,7 @@ module.exports = Request.get(LIST_MODULES_URL, { json: true }).then(function (da
         }
       ]
     },
-    externals: _(modules).reduce(function (acc, module) {
-        return _.set(acc, module.name, true);
-    }, {
-      // Not provisioned via verquire
-      'auth0-api-jwt-rsa-validation': true,
-      'auth0-authz-rules-api': true,
-      'auth0-oauth2-express': true,
-      'auth0-sandbox-ext': true,
-      'detective': true,
-      'sandboxjs': true,
-      'webtask-tools': false
-    }),
+    externals: extModules,
     plugins: [
       new Webpack.optimize.DedupePlugin()
     ],
@@ -48,6 +50,7 @@ module.exports = Request.get(LIST_MODULES_URL, { json: true }).then(function (da
       root: __dirname,
       alias: {},
     },
-    node: false
+    node: false,
+    target: 'node'
   };
 });
