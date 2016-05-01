@@ -1,15 +1,13 @@
 import express  from 'express'
-import Webtask  from 'webtask-tools'
-import template from './views/index.jade'
 import admin    from './routes/admin'
-import update   from './routes/updateemail'
+import update   from './routes/update'
 import unless   from 'express-unless'
 
 const app = express();
 
 
-app.use('/updateemail',update);
+app.use('/update',update);
 admin.unless = unless;
-app.use('/',admin.unless({path:'/updateemail*'}));
+app.use('/',admin.unless({path:'/update*'}));
 
 export default app;

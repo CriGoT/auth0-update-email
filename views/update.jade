@@ -50,15 +50,109 @@ html
           );
         }
       });
-
+      var timer;
       var LoggedIn = React.createClass({
-        callApi: function() {
 
+        updateEmail: function() {
+          var data = JSON.stringify({email:this.state.new_mail});
+          this.setState({
+            profile: this.state.profile,
+            new_mail: this.state.new_mail,
+            is_valid: true,
+            is_available: true,
+            changed: true,
+            working: true,
+            });
+          $.ajax({
+            method: 'PATCH',
+            url: this.props.apiUrl + '/me',
+            data: data,
+            dataType: 'json',
+            contentType: 'application/json',
+            cache: false})
+          .then( result=>{
+            alert(result.message);
+          },err =>{
+            console.log(err);
+            alert(err.description);
+          });
+
+        },
+
+        checkAvailability: function()
+        {
+           var state = this.state;
+           state.working=true;
+           if (state.is_valid && state.changed){
+            this.setState(state);
+            $.ajax({
+              method: 'GET',
+              url: this.props.apiUrl + '/isavailable',
+              data: {m:state.new_mail},
+              dataType: 'json',
+              cache: false})
+            .then( result=>{
+              if (state.new_mail===this.state.new_mail)
+                this.setState({
+                  profile: this.state.profile,
+                  new_mail: state.new_mail,
+                  is_valid: true,
+                  is_available: result,
+                  changed: true,
+                  working: false});
+            },err =>{
+              console.log(err);
+              this.setState({
+                profile: this.state.profile,
+                new_mail:event.target.value,
+                is_valid: true,
+                is_available: false,
+                changed: true,
+                working: false});
+            });
+           }
+        },
+
+        onMailChange: function(event) {
+          window.clearTimeout(timer);
+          var regExp = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
+
+          if (!event.target.value)
+          {
+            this.setState({
+              profile: this.state.profile,
+              new_mail: null,
+              is_valid: false,
+              is_available: false,
+              changed: false,
+              working: false});
+            return;
+          }
+
+          var valid = regExp.test(event.target.value);
+          var changed = event.target.value !== this.state.profile.email;
+
+          this.setState({
+              profile: this.state.profile,
+              new_mail: event.target.value,
+              is_valid: valid,
+              is_available: false,
+              changed: changed,
+              working: valid && changed});
+
+          if (valid && changed) {
+            timer = window.setTimeout(this.checkAvailability,350);
+          }
         },
 
         getInitialState: function() {
           return {
-            profile: null
+            profile: null,
+            new_mail: null,
+            is_valid: false,
+            is_available: false,
+            changed: false,
+            working: false
           }
         },
 
@@ -68,8 +162,54 @@ html
               console.log("Error loading the Profile", err);
               alert("Error loading the Profile");
             }
-            this.setState({profile: profile});
+            this.setState({profile: profile, new_mail:profile.email, is_valid:false, is_available:false, changed:false, working: false});
           }.bind(this));
+        },
+
+        renderForm : function() {
+          return (
+            <form className="form-horizontal">
+              <div className="form-group">
+                <label className="col-xs-3 control-label">Current E-Mail</label>
+                <div className="col-xs-6">
+                  <input type="text" required readOnly className="form-control" value={this.state.profile.email} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="col-xs-3 control-label">New E-Mail</label>
+                <div className="col-xs-6">
+                  <input type="text" onChange={this.onMailChange} className="form-control" readOnly={this.state.is_available && this.state.working} value={this.state.new_mail} />
+                </div>
+              </div>
+            </form>);
+        },
+
+        renderButton: function() {
+          if (this.state.changed)
+             if (this.state.is_valid)
+               if (this.state.working)
+                 return (
+                    <div className="spinner spinner-md is-auth0 center-block" >
+                      <div className="circle"></div>
+                    </div>
+                  );
+               else
+                 if (this.state.is_available)
+                   return (
+                    <button onClick={this.updateEmail} className="btn btn-lg btn-primary center-block"><span className="btn-icon icon-budicon-781"> </span>Update E-mail</button>
+                   );
+                 else
+                   return (
+                    <button className="btn btn-lg btn-danger center-block"><span className="btn-icon icon-budicon-782"> </span>E-mail address already in use</button>
+                   );
+             else
+               return (
+                  <button className="btn btn-lg btn-warning center-block"><span className="btn-icon icon-budicon-780"> </span>Invalid E-mail address</button>
+               );
+          else
+             return (
+                <button className="btn btn-lg btn-primary center-block" disabled><span className="btn-icon icon-budicon-781"> </span>Update E-mail</button>
+             );
         },
 
         render: function() {
@@ -77,21 +217,8 @@ html
             return (
               <div>
                 <h2>Welcome {this.state.profile.name || this.state.profile.nickname}</h2>
-                <form className="form-horizontal">
-                    <div className="form-group">
-                      <label className="col-xs-3 control-label">Current E-Mail</label>
-                      <div className="col-xs-6">
-                        <input type="text" required readOnly className="form-control" value={this.state.profile.email} />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label className="col-xs-3 control-label">New E-Mail</label>
-                      <div className="col-xs-6">
-                        <input type="text" className="form-control" value={this.state.profile.email} />
-                      </div>
-                    </div>
-                </form>
-                <button onClick={this.callApi} className="btn btn-lg btn-primary center-block">Update E-mail</button>
+                {this.renderForm()}
+                {this.renderButton()}
               </div>);
           } else {
             return (
@@ -104,11 +231,12 @@ html
           componentWillMount: function() {
             this.setupAjax();
             this.createLock();
-            this.setState({idToken: this.getIdToken()})
+            this.setState({idToken: this.getIdToken(),submitted:false})
           },
           createLock: function() {
             this.lock = new Auth0Lock(this.props.clientId, this.props.domain);
           },
+
           setupAjax: function() {
             $.ajaxSetup({
               'beforeSend': function(xhr) {
@@ -135,7 +263,7 @@ html
           },
           render: function() {
             if (this.state.idToken) {
-              return (<LoggedIn lock={this.lock} idToken={this.state.idToken} />);
+              return (<LoggedIn lock={this.lock} idToken={this.state.idToken} {...this.props} />);
             } else {
               return (<Home lock={this.lock} />);
             }
@@ -145,6 +273,6 @@ html
       const AUTH0_CLIENT_ID='#{config.AUTH0_CLIENT_ID}';
       const apiUrl = '#{baseUrl}/api';
       ReactDOM.render(
-        <App clientId={AUTH0_CLIENT_ID} domain={AUTH0_DOMAIN} />,
+        <App clientId={AUTH0_CLIENT_ID} domain={AUTH0_DOMAIN} apiUrl={apiUrl}/>,
         document.getElementById('content')
       );
