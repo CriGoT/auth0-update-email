@@ -1,6 +1,6 @@
 import express  from 'express'
 import auth0    from 'auth0-oauth2-express'
-import template from '../views/index.jade'
+import template from '../views/admin.jade'
 import url      from 'url'
 import util     from'./utils'
 
