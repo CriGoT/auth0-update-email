@@ -1,7 +1,7 @@
 {
-  "name": "emailupdate",
-  "version": "1.0.0",
-  "description": "Provides a simple way for users to update their own e-mail address",
+  "name": "auth0-email-update",
+  "version": "0.0.3",
+  "description": "Provides a simple way for Auth0 users to update their own e-mail address",
   "scripts": {
     "start": "webpack -d --config webpack.dev.config.js && node build/bundle.js",
     "bundle": "webpack -p --config webpack.wt.config.js"
