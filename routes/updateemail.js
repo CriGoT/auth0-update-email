@@ -5,41 +5,45 @@ import util               from './utils'
 import bodyParser         from 'body-parser'
 import {ManagementClient} from 'auth0'
 
-const config = {
-  AUTH0_DOMAIN: 'crigot.auth0.com',
-  AUTH0_MANAGEMENT_TOKEN: '',
-  AUTH0_CLIENT_ID:'',
-  AUTH0_CLIENT_SECRET: '',
-  AUTH0_CONNECTION: 'Username-Password-Authentication',
+const createAuth0Client = (req, res, next) => {
+  try{
+    if (req.webtaskContext && req.webtaskContext.secrets)
+    {
+        const client =new ManagementClient({
+          token: req.webtaskContext.secrets.AUTH0_MANAGEMENT_TOKEN,
+          domain: req.webtaskContext.secrets.AUTH0_DOMAIN
+        });
+        req.auth0Client = client;
+    }
+  }
+  catch(err) {
+    console.log('Auth0 client not available');
+    return next(err);
+  }
+  return next();
 };
 
-
-
 const authenticate = jwt({
-  secret: new Buffer(config.AUTH0_CLIENT_SECRET, 'base64'),
-  audience: config.AUTH0_CLIENT_ID
+  secret: (req,__,cb) =>{ cb(null,new Buffer(req.webtaskContext.secrets.AUTH0_CLIENT_SECRET, 'base64'));}
+  //audience: config.AUTH0_CLIENT_ID
 });
 
 const api = express.Router();
 
 api.get('/isavailable',(req, res)=>{
+
   if (!req.query.m) {
     return res.status(400).json({"name":"BadRequestError","code":"mail_required","description":"You must provide a mail to validate","statusCode":400});
   }
   console.log(`Checking if e-mail ${req.query.m} is being used`)
-  const auth0client =new ManagementClient({
-    token: config.AUTH0_MANAGEMENT_TOKEN,
-    domain: config.AUTH0_DOMAIN
-  });
-
-  auth0client
+  req.auth0Client
     .users
     .getAll({
       per_page: 1,
       include_fields: true,
       search_engine: 'v2',
       fields: 'email',
-      q: `identities.connection:"${config.AUTH0_CONNECTION}" AND email:"${req.query.m}"`
+      q: `identities.connection:"${req.webtaskContext.secrets.AUTH0_CONNECTION}" AND email:"${req.query.m}"`
     })
     .then((data) => {
       const result = !data.some(value => value.email.toUpperCase()===req.query.m.toUpperCase());
@@ -55,7 +59,7 @@ api.get('/isavailable',(req, res)=>{
 
 });
 
-api.use('/me',(req,res)=>{
+api.patch('/me',(req,res)=>{
   console.log(req.body);
   if (!req.body || !req.body.email)
   {
@@ -64,18 +68,12 @@ api.use('/me',(req,res)=>{
   else
   {
     console.log(`Updating user ${req.user.sub} with email ${req.body.email}`);
-    const auth0client =new ManagementClient({
-      token: config.AUTH0_MANAGEMENT_TOKEN,
-      domain: config.AUTH0_DOMAIN
-    });
-
-    auth0client
+    req.auth0Client
       .users
       .update({id:req.user.sub},{email:req.body.email})
       .then(data => {
         console.log(`User ${req.user.sub} updated!`)
-
-        auth0client
+        req.auth0Client
           .jobs
           .verifyEmail({user_id:req.user.sub})
           .then(data => {
@@ -98,13 +96,14 @@ const router = express.Router();
 
 router.use('/api',
     authenticate,
+    createAuth0Client,
     bodyParser.json(),
     api);
 
 router.get('/',(req,res) =>
 {
   res.header("Content-Type", 'text/html');
-  res.status(200).send(template({baseUrl:util.getBaseUrl(req), config:config}));
+  res.status(200).send(template({baseUrl:util.getBaseUrl(req), config:req.webtaskContext.secrets}));
 });
 
 

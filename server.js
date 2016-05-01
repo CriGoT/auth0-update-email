@@ -1,7 +1,16 @@
-import App from './'
+import express from 'express'
+import App     from './'
+import config  from'./config'
 
-let port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
+const server=express();
 
-App.listen(port, () => {
+server.use((req,res,next) =>{
+ req.webtaskContext = {secrets: config};
+ return next();
+});
+server.use(App);
+
+server.listen(port, () => {
     console.log('Server started on port', port);
 })
