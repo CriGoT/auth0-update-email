@@ -3,11 +3,14 @@ import admin    from './routes/admin'
 import update   from './routes/update'
 import unless   from 'express-unless'
 
-const app = express();
+export default function(config) {
+  const app = express();
+  const updateMiddleware = update(config);
+  const adminMiddleware = admin(config);
 
+  app.use('/update',updateMiddleware);
+  adminMiddleware.unless = unless;
+  app.use('/',adminMiddleware.unless({path:'/update*'}));
 
-app.use('/update',update);
-admin.unless = unless;
-app.use('/',admin.unless({path:'/update*'}));
-
-export default app;
+  return app;
+}

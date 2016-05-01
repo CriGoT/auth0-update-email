@@ -9,7 +9,7 @@ server.use((req,res,next) =>{
  req.webtaskContext = {secrets: config};
  return next();
 });
-server.use(App);
+server.use(App(config));
 
 server.listen(port, () => {
     console.log('Server started on port', port);
