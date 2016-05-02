@@ -1,9 +1,9 @@
 {
-  "title": "emailupdate",
-  "name": "emailupdate",
-  "version": "1.0.0",
+  "title": "Self-Service E-mail update",
+  "name": "auth0-email-update",
+  "version": "0.0.5",
   "author": "CriGoT",
-  "description": "Provides a simple way for users to update their own e-mail address",
+  "description": "Provides a simple way for database users to update their own e-mail address",
   "type": "application",
   "keywords": [
     "auth0"
