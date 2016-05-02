@@ -8,7 +8,7 @@
   "keywords": [
     "auth0"
   ],
-  "codeUrl": "https://raw.githubusercontent.com/CriGoT/auth0-update-email/standalone/build/build.wt.js",
+  "codeUrl": "https://raw.githubusercontent.com/CriGoT/auth0-update-email/standalone/build/bundle.wt.js",
   "secrets": {
     "AUTH0_DOMAIN":  {
       "description": "The Auth0 tenant domain."
