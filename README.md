@@ -1,35 +1,14 @@
-# emailupdate
+# Auth0 Self-Service 
 
 Provides a simple way for users to update their own e-mail address
 
-## Running locally
+## Documentation
+You can find more information in the following documents:
 
-To run the sample locally:
-
-```bash
-$ npm install
-$ npm start
-```
-
-## Deploying to Auth0 Extensions
-
-```bash
-$ npm run bundle 
-$ wt-gallery deploy ./build/bundle.js
-```
-
-Note: Requires [webpack](https://webpack.github.io/docs/).
-
-## Deploying to Webtask.io
-
-If you want to host your application, you can easily  do it by using [Webtask.io](https://webtask.io).
-
-```bash
-$ npm run bundle
-$ wt create ./build/bundle.js --name emailupdate --no-parse --no-merge
-```
-
-Note: For more information about how to setup Webtask, click [here](https://webtask.io/docs/101).
+ - [Overview](home)
+ - [Deploy it in less than 10 minutes](Webtask Git Deployment)
+ - [Build it locally](Server Deployment)
+ - [How does it work?](How does it work)
 
 ## Issue Reporting
 
