@@ -5,10 +5,10 @@ Provides a simple way for users to update their own e-mail address
 ## Documentation
 You can find more information in the following documents:
 
- - [Overview](home)
- - [Deploy it in less than 10 minutes](Webtask Git Deployment)
- - [Build it locally](Server Deployment)
- - [How does it work?](How does it work)
+ - [Overview](https://github.com/CriGoT/auth0-update-email/wiki)
+ - [Deploy it in less than 10 minutes](https://github.com/CriGoT/auth0-update-email/wiki/Extension-Deployment)
+ - [Build it locally](https://github.com/CriGoT/auth0-update-email/wiki/Server-Deployment)
+ - [How does it work?](https://github.com/CriGoT/auth0-update-email/wiki/How-does-it-work)
 
 ## Issue Reporting
 
