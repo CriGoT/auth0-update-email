@@ -7,5 +7,23 @@
   "type": "application",
   "keywords": [
     "auth0"
-  ]
+  ],
+  "codeUrl": "https://raw.githubusercontent.com/CriGoT/auth0-update-email/standalone/build/build.wt.js",
+  "secrets": {
+    "AUTH0_DOMAIN":  {
+      "description": "The Auth0 tenant domain."
+    },
+  "AUTH0_CLIENT_ID":{
+      "description": "Client ID of the application registered in the Auth0 tenant."
+    },
+  "AUTH0_CLIENT_SECRET":{
+      "description": "The application secret used to validate the tokens."
+    },
+  "AUTH0_CONNECTION":{
+      "description": "Name of the database connections that the users belong to."
+    },
+  "AUTH0_MANAGEMENT_TOKEN": {
+    "description": "Token to acces the Managment API v2 with scope including read:users and update:users."
+    }
+  }
 }
