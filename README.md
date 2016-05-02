@@ -1,5 +1,3 @@
-# Auth0 Self-Service 
-
 Provides a simple way for users to update their own e-mail address
 
 ## Documentation
