@@ -46,8 +46,7 @@ export default function update(config) {
       .then((data) => {
         const result = !data.some(value => value.email.toUpperCase()===req.query.m.toUpperCase());
         //const result = !data.some((value) => value.email.length===req.query.m.length) // better performance bu it may not be necessary
-        console.log(`E-mail ${req.query.m} is ${result ? 'not ':''} being used`)
-
+        console.log(`E-mail ${req.query.m} is ${result ? 'not ':''} being used`);
         res.status(200).json(result);
       })
       .catch((err)=>{
@@ -58,40 +57,37 @@ export default function update(config) {
   });
 
   api.patch('/me',(req,res)=>{
-    console.log(req.body);
     if (!req.body || !req.body.email)
     {
-      res.status(400).json({"name":"BadRequestError","code":"mail_required","description":"You must provide a mail to update the user info","statusCode":400});
+      return res.status(400).json({"name":"BadRequestError","code":"mail_required","description":"You must provide a mail to update the user info","statusCode":400});
     }
-    else
-    {
-      console.log(`Updating user ${req.user.sub} with email ${req.body.email}`);
-      req.auth0Client
-        .users
-        .update({id:req.user.sub},{email:req.body.email})
-        .then(data => {
-          console.log(`User ${req.user.sub} updated!`)
-          req.auth0Client
-            .jobs
-            .verifyEmail({user_id:req.user.sub})
-            .then(data => {
-              console.log(`Verification for user ${req.user.sub} requested!`)
-              res.status(201).json({"status":"completed","message":"Your E-mail address has been updated you will shortly receive a message to verify it."});
-            })
-            .catch(err => {
-              console.log(err);
-              res.status(201).json({"status":"pending","message":"Your E-mail address has been updated but the message to verify your new address was not sent."});
-            });
-        })
-        .catch((err)=>{
-          console.log(err);
-          if (err.statusCode===400){
-            res.status(400).json({"name":err.name,"code":"bad_api_request","description":err.message,"statusCode":400});
-          }else{
-            res.status(500).json({"name":"InternalError","code":"management_api_error","description":"The Managemente API returned an error while updating the user","statusCode":500});
-          }
-        });
-    }
+
+    console.log(`Updating user ${req.user.sub} with email ${req.body.email}`);
+    req.auth0Client
+      .users
+      .update({id:req.user.sub},{email:req.body.email})
+      .then(data => {
+        console.log(`User ${req.user.sub} updated!`)
+        req.auth0Client
+          .jobs
+          .verifyEmail({user_id:req.user.sub})
+          .then(data => {
+            console.log(`Verification for user ${req.user.sub} requested!`)
+            res.status(201).json({"status":"completed","message":"Your E-mail address has been updated you will shortly receive a message to verify it."});
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(201).json({"status":"pending","message":"Your E-mail address has been updated but the message to verify your new address was not sent."});
+          });
+      })
+      .catch((err)=>{
+        console.log(err);
+        if (err.statusCode===400){
+          res.status(400).json({"name":err.name,"code":"bad_api_request","description":err.message,"statusCode":400});
+        }else{
+          res.status(500).json({"name":"InternalError","code":"management_api_error","description":"The Managemente API returned an error while updating the user","statusCode":500});
+        }
+      });
   });
 
   const router = express.Router();

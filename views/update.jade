@@ -32,9 +32,29 @@ html
         #content.wrapper.col-xs-10
 
     script(type='text/babel').
+      var Spinner = React.createClass({
+        render: function(){
+          return <div className="spinner spinner-md is-auth0 center-block"><div className="circle"></div></div>
+        }
+      });
+
+      var Result = React.createClass({
+        render:function(){
+          return <div className={'alert alert-' + this.props.type}><p>{this.props.text}</p><strong>For your security close the browser</strong></div>;
+        }
+      });
+
+      var Button = React.createClass({
+        render : function(){
+           return (
+             <button onClick={this.props.click} className={'btn btn-lg btn-' + this.props.type + ' center-block'} disabled={this.props.disabled}><span className={'btn-icon icon-budicon-' + this.props.icon}> </span>{this.props.text}</button>
+           );
+        }
+      });
+
       var Home = React.createClass({
         showLock: function() {
-          this.props.lock.showSignin({closable:false,rememberLastLogin:false,connections:[this.props.connection]});
+          this.props.lock.showSignin({closable:false,rememberLastLogin:false,connections:[this.props.connection],container:'auth0-lock',authParams:{scope:'openid email name nickname'}});
         },
 
         componentDidMount:function() {
@@ -43,155 +63,83 @@ html
 
         render: function() {
           return (
-            <div className="col-xs-6 col-xs-offset-3">
-              <p>To change your E-mail address you must authenticate.</p>
-              <a onClick={this.showLock} className="btn btn-primary btn-lg btn-login btn-block ">Sign In</a>
+            <div className="col-xs-6 col-xs-offset-4">
+              <div id='auth0-lock'></div>
             </div>
           );
         }
       });
+
       var timer;
       var LoggedIn = React.createClass({
+        isValidMail : function(value){
+          var regExp = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
+          return regExp.test(value || this.state.new_mail)
+        },
+
+        updateState: function(newState){
+          this.setState($.extend({},this.state,newState));
+        },
+
+        mailChanged : function(new_mail){
+          new_mail= new_mail || this.state.new_mail;
+          return this.props.profile.email !== new_mail && new_mail && new_mail!=='';
+        },
+
         getInitialState: function() {
           return {
-            profile: null,
-            new_mail: null,
-            is_valid: false,
+            new_mail: this.props.profile.email,
             is_available: false,
-            changed: false,
             working: false,
-            result: null,
-            error: null
+            result: null
           }
         },
 
-        updateEmail: function() {
-          var data = JSON.stringify({email:this.state.new_mail});
-          this.setState({
-            profile: this.state.profile,
-            new_mail: this.state.new_mail,
-            is_valid: true,
-            is_available: true,
-            changed: true,
-            working: true,
-            result: null,
-            error: null});
+        setResult : function (type,message) {
+            this.updateState({working: false, result: {type: type, message: message}});
+            window.location.replace('#');
+        },
+
+        callApi: function(method,path,data,done,fail){
+          this.updateState({working: true});
           $.ajax({
-            method: 'PATCH',
-            url: this.props.apiUrl + '/me',
+            method: method,
+            url: this.props.apiUrl + '/' + path,
             data: data,
             dataType: 'json',
             contentType: 'application/json',
             cache: false})
-          .then( result=>{
-            this.setState({
-              profile: this.state.profile,
-              new_mail: this.state.new_mail,
-              is_valid: true,
-              is_available: true,
-              changed: true,
-              working: true,
-              result: result.message,
-              error: null});
-            window.location.replace('#');
-          },err =>{
-            console.log(err);
-            this.setState({
-              profile: this.state.profile,
-              new_mail: this.state.new_mail,
-              is_valid: true,
-              is_available: true,
-              changed: true,
-              working: true,
-              result: null,
-              error: err.description});
-            window.location.replace('#');
-          });
-
+          .then(done,fail);
         },
 
-        checkAvailability: function()
-        {
-           var state = this.state;
-           state.working=true;
-           if (state.is_valid && state.changed){
-            this.setState(state);
-            $.ajax({
-              method: 'GET',
-              url: this.props.apiUrl + '/isavailable',
-              data: {m:state.new_mail},
-              dataType: 'json',
-              cache: false})
-            .then( result=>{
-              if (state.new_mail===this.state.new_mail)
-                this.setState({
-                  profile: this.state.profile,
-                  new_mail: state.new_mail,
-                  is_valid: true,
-                  is_available: result,
-                  changed: true,
-                  working: false,
-                  result: null,
-                  error: null});
-            },err =>{
-              console.log(err);
-              this.setState({
-                profile: this.state.profile,
-                new_mail:event.target.value,
-                is_valid: true,
-                is_available: false,
-                changed: true,
-                working: false,
-                result: null,
-                error: null});
-            });
+        updateEmail: function() {
+          this.callApi('PATCH','me',JSON.stringify({email:this.state.new_mail}),
+            result=> this.setResult('success',result.message),
+            err =>{
+              console.log('Error updating e-mail',err);
+              this.setResult('danger',err.description)
+          });
+        },
+
+        checkAvailability: function(){
+           if (this.mailChanged() && this.isValidMail()){
+             var state = this.state;
+             this.callApi('GET','isavailable',{m:state.new_mail},
+              result=>{
+                if (state.new_mail===this.state.new_mail)
+                  this.updateState({is_available: result, working: false});
+              },
+              err =>{
+                console.log(err);
+                this.updateState({is_available: false, working: false});
+              });
            }
         },
 
         onMailChange: function(event) {
           window.clearTimeout(timer);
-          var regExp = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
-
-          if (!event.target.value)
-          {
-            this.setState({
-              profile: this.state.profile,
-              new_mail: null,
-              is_valid: false,
-              is_available: false,
-              changed: false,
-              working: false,
-              result: null,
-              error: null});
-            return;
-          }
-
-          var valid = regExp.test(event.target.value);
-          var changed = event.target.value !== this.state.profile.email;
-
-          this.setState({
-              profile: this.state.profile,
-              new_mail: event.target.value,
-              is_valid: valid,
-              is_available: false,
-              changed: changed,
-              working: valid && changed,
-              result: null,
-              error: null});
-
-          if (valid && changed) {
-            timer = window.setTimeout(this.checkAvailability,350);
-          }
-        },
-
-        componentDidMount: function() {
-          this.props.lock.getProfile(this.props.idToken, function (err, profile) {
-            if (err) {
-              console.log("Error loading the Profile", err);
-              alert("Error loading the Profile");
-            }
-            this.setState({profile: profile, new_mail:profile.email, is_valid:false, is_available:false, changed:false, working: false});
-          }.bind(this));
+          this.updateState({new_mail: event.target.value,is_available: false,working: this.mailChanged(event.target.value) && this.isValidMail(event.target.value) });
+          timer = window.setTimeout(this.checkAvailability,350);
         },
 
         renderForm : function() {
@@ -200,7 +148,7 @@ html
               <div className="form-group">
                 <label className="col-xs-3 control-label">Current E-Mail</label>
                 <div className="col-xs-6">
-                  <input type="text" required readOnly className="form-control" value={this.state.profile.email} />
+                  <input type="text" required readOnly className="form-control" value={this.props.profile.email} />
                 </div>
               </div>
               <div className="form-group">
@@ -212,60 +160,29 @@ html
             </form>);
         },
 
-        renderButton: function() {
+        renderAction: function() {
           if (this.state.result)
-            return(
-              <div className="alert alert-success">
-                <p>{this.state.result}</p>
-                <strong>For your security close the browser</strong>
-              </div>
-            );
+            return <Result type={this.state.result.type} text={this.state.result.message} />;
 
-          if (this.state.error)
-          {
-            return(
-              <div className="alert alert-success">
-              <p>{this.state.error}</p>
-              <strong>For your security close the browser</strong>
-              </div>
-            );
-          }
+          if (this.state.working)
+            return <Spinner />;
 
+          if (!this.isValidMail())
+            return <Button type="warning" icon='780' text='Invalid E-mail address' />;
 
-          if (this.state.changed)
-             if (this.state.is_valid)
-               if (this.state.working)
-                 return (
-                    <div className="spinner spinner-md is-auth0 center-block" >
-                      <div className="circle"></div>
-                    </div>
-                  );
-               else
-                 if (this.state.is_available)
-                   return (
-                    <button onClick={this.updateEmail} className="btn btn-lg btn-primary center-block"><span className="btn-icon icon-budicon-781"> </span>Update E-mail</button>
-                   );
-                 else
-                   return (
-                    <button className="btn btn-lg btn-danger center-block"><span className="btn-icon icon-budicon-782"> </span>E-mail address already in use</button>
-                   );
-             else
-               return (
-                  <button className="btn btn-lg btn-warning center-block"><span className="btn-icon icon-budicon-780"> </span>Invalid E-mail address</button>
-               );
-          else
-             return (
-                <button className="btn btn-lg btn-primary center-block" disabled><span className="btn-icon icon-budicon-781"> </span>Update E-mail</button>
-             );
+          if (this.mailChanged() && !this.state.is_available)
+             return <Button type="danger" icon='782' text='E-mail address already in use' />;
+
+          return <Button click={this.updateEmail} disabled={!this.mailChanged()} type="primary" icon='781' text='Update E-mail' />;
         },
 
         render: function() {
-          if (this.state.profile) {
+          if (this.props.profile) {
             return (
               <div>
-                <h2>Welcome {this.state.profile.name || this.state.profile.nickname}</h2>
+                <h2>Welcome {this.props.profile.name || this.props.profile.nickname || this.props.profile.email}</h2>
                 {this.renderForm()}
-                {this.renderButton()}
+                {this.renderAction()}
               </div>);
           } else {
             return (
@@ -278,43 +195,44 @@ html
           componentWillMount: function() {
             this.createLock();
             this.setupAjax();
-            this.setState({idToken: this.getIdToken(),submitted:false})
+            this.setState(this.getState())
           },
+
           createLock: function() {
             this.lock = new Auth0Lock(this.props.clientId, this.props.domain);
           },
 
           setupAjax: function() {
-            var id_token = this.getIdToken();
-            if (id_token)
+            var profile = this.getState() || {};
+            if (profile.id_token)
             {
               $.ajaxSetup({
                 'beforeSend': function(xhr) {
                     xhr.setRequestHeader('Authorization',
-                          'Bearer ' + id_token);
+                          'Bearer ' + profile.id_token);
                 }
               });
             }
           },
-          getIdToken: function() {
-            var idToken;
+
+          getState: function() {
+            var state;
             var authHash = this.lock.parseHash(window.location.hash);
             if (authHash) {
-              if (authHash.id_token) {
-                idToken = authHash.id_token;
-              }
               if (authHash.error) {
                 console.log("Error signing in", authHash);
+              } else{
+                state = authHash;
               }
             }
-            return idToken;
+            return state;
           },
+
           render: function() {
-            if (this.state.idToken) {
-              return (<LoggedIn lock={this.lock} idToken={this.state.idToken} {...this.props} />);
-            } else {
-              return (<Home lock={this.lock} {...this.props} />);
-            }
+            if (this.state.profile)
+              return <LoggedIn lock={this.lock} profile={this.state.profile} {...this.props} />;
+            else
+              return <Home lock={this.lock} {...this.props} />;
           }
         });
       var AUTH0_DOMAIN='#{config.AUTH0_DOMAIN}';
