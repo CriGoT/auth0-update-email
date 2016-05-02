@@ -1,7 +1,7 @@
 {
   "title": "Self-Service E-mail update",
   "name": "auth0-email-update",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "author": "CriGoT",
   "description": "Provides a simple way for database users to update their own e-mail address",
   "type": "application",
@@ -13,16 +13,16 @@
     "AUTH0_DOMAIN":  {
       "description": "The Auth0 tenant domain."
     },
-  "AUTH0_CLIENT_ID":{
+    "AUTH0_CLIENT_ID":{
       "description": "Client ID of the application registered in the Auth0 tenant."
     },
-  "AUTH0_CLIENT_SECRET":{
+    "AUTH0_CLIENT_SECRET":{
       "description": "The application secret used to validate the tokens."
     },
-  "AUTH0_CONNECTION":{
+    "AUTH0_CONNECTION":{
       "description": "Name of the database connections that the users belong to."
     },
-  "AUTH0_MANAGEMENT_TOKEN": {
+    "AUTH0_MANAGEMENT_TOKEN": {
     "description": "Token to acces the Managment API v2 with scope including read:users and update:users."
     }
   }
