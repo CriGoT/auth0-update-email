@@ -1,34 +1,39 @@
-var timer;
-var LoggedIn = React.createClass({
-  isValidMail : function(value){
-    var regExp = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
-    return regExp.test(value || this.state.new_mail)
-  },
+import React,{Component} from 'react'
+import Spinner from './spinner.jsx'
+import Result  from './result.jsx'
+import Button from './button.jsx'
 
-  updateState: function(newState){
-    this.setState($.extend({},this.state,newState));
-  },
-
-  mailChanged : function(new_mail){
-    new_mail= new_mail || this.state.new_mail;
-    return this.props.profile.email !== new_mail && new_mail && new_mail!=='';
-  },
-
-  getInitialState: function() {
-    return {
+let timer;
+export default class Form extends Component{
+  componentWillMount(){
+    this.setState({
       new_mail: this.props.profile.email,
       is_available: false,
       working: false,
       result: null
-    }
-  },
+    });
+  }
 
-  setResult : function (type,message) {
+  isValidMail(value){
+    var regExp = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
+    return regExp.test(value || this.state.new_mail)
+  }
+
+  updateState(newState){
+    this.setState($.extend({},this.state,newState));
+  }
+
+  mailChanged(new_mail){
+    new_mail= new_mail || this.state.new_mail;
+    return this.props.profile.email !== new_mail && new_mail && new_mail!=='';
+  }
+
+  setResult(type,message) {
       this.updateState({working: false, result: {type: type, message: message}});
       window.location.replace('#');
-  },
+  }
 
-  callApi: function(method,path,data,done,fail){
+  callApi(method,path,data,done,fail){
     this.updateState({working: true});
     $.ajax({
       method: method,
@@ -38,18 +43,18 @@ var LoggedIn = React.createClass({
       contentType: 'application/json',
       cache: false})
     .then(done,fail);
-  },
+  }
 
-  updateEmail: function() {
+  updateEmail() {
     this.callApi('PATCH','me',JSON.stringify({email:this.state.new_mail}),
       result=> this.setResult('success',result.message),
       err =>{
         console.log('Error updating e-mail',err);
         this.setResult('danger',err.description)
     });
-  },
+  }
 
-  checkAvailability: function(){
+  checkAvailability(){
       if (this.mailChanged() && this.isValidMail()){
         var state = this.state;
         this.callApi('GET','isavailable',{m:state.new_mail},
@@ -62,15 +67,15 @@ var LoggedIn = React.createClass({
           this.updateState({is_available: false, working: false});
         });
       }
-  },
+  }
 
-  onMailChange: function(event) {
+  onMailChange(event) {
     window.clearTimeout(timer);
     this.updateState({new_mail: event.target.value,is_available: false,working: this.mailChanged(event.target.value) && this.isValidMail(event.target.value) });
-    timer = window.setTimeout(this.checkAvailability,350);
-  },
+    timer = window.setTimeout(_ =>this.checkAvailability(),350);
+  }
 
-  renderForm : function() {
+  renderForm() {
     return (
       <form className="form-horizontal">
         <div className="form-group">
@@ -82,13 +87,13 @@ var LoggedIn = React.createClass({
         <div className="form-group">
           <label className="col-xs-3 control-label">New E-Mail</label>
           <div className="col-xs-6">
-            <input type="text" onChange={this.onMailChange} className="form-control" readOnly={this.state.result || this.state.error || (this.state.is_available && this.state.working)} value={this.state.new_mail} />
+            <input type="text" onChange={this.onMailChange.bind(this)} className="form-control" readOnly={this.state.result || this.state.error || (this.state.is_available && this.state.working)} value={this.state.new_mail} />
           </div>
         </div>
       </form>);
-  },
+  }
 
-  renderAction: function() {
+  renderAction() {
     if (this.state.result)
       return <Result type={this.state.result.type} text={this.state.result.message} />;
 
@@ -101,10 +106,10 @@ var LoggedIn = React.createClass({
     if (this.mailChanged() && !this.state.is_available)
         return <Button type="danger" icon='782' text='E-mail address already in use' />;
 
-    return <Button click={this.updateEmail} disabled={!this.mailChanged()} type="primary" icon='781' text='Update E-mail' />;
-  },
+    return <Button click={this.updateEmail.bind(this)} disabled={!this.mailChanged()} type="primary" icon='781' text='Update E-mail' />;
+  }
 
-  render: function() {
+  render() {
     if (this.props.profile) {
       return (
         <div>
@@ -118,4 +123,4 @@ var LoggedIn = React.createClass({
         );
     }
   }
-});
+}

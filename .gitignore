@@ -37,3 +37,4 @@ node_modules
 
 #dev builds
 build/bundle.js*
+build/bundle.app.js*

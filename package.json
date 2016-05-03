@@ -1,11 +1,11 @@
 {
   "name": "auth0-email-update",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Provides a simple way for Auth0 database users to update their own e-mail address",
   "scripts": {
-    "start": "webpack -d --config webpack.dev.config.js && node build/bundle.js",
-    "bundle": "webpack -p --config webpack.wt.config.js",
-    "bundle-standalone": "webpack -p --config webpack.dev.config.js"
+    "start": "webpack -d --config webpack.app.config.js && webpack -d --config webpack.dev.config.js && node build/bundle.js",
+    "bundle": "webpack -p --config webpack.app.config.js && webpack -p --config webpack.wt.config.js",
+    "bundle-standalone": "webpack -p --config webpack.app.config.js && webpack -p --config webpack.dev.config.js"
   },
   "keywords": [
     "auth0"
@@ -25,6 +25,7 @@
     "babel-core": "^6.5.1",
     "babel-loader": "^6.2.2",
     "babel-preset-es2015": "^6.5.0",
+    "babel-preset-react": "^6.5.0",
     "jade": "1.10.0",
     "jade-loader": "^0.8.0",
     "lodash": "3.9.3",

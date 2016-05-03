@@ -22,7 +22,7 @@ module.exports = Request.get(LIST_MODULES_URL, { json: true }).then(function (da
   extModules.auth0 ='auth0@2.1.0';
 
   return {
-    entry: './webtask',
+    entry:'./webtask',
     output: {
       path: './build',
       filename: 'bundle.wt.js',
@@ -33,7 +33,7 @@ module.exports = Request.get(LIST_MODULES_URL, { json: true }).then(function (da
       loaders: [
         { test: /\.jade$/, loader: require.resolve('jade-loader') },
         {
-          test: /\.js?$/,
+          test: /\.js$/,
           exclude: /(node_modules)/,
           loader: 'babel',
           query: {

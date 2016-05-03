@@ -1,15 +1,20 @@
-var App = React.createClass({
-  componentWillMount: function() {
+import React, {Component} from 'react'
+import ReactDOM from 'react-dom'
+import Form from './form.jsx'
+import Home from './home.jsx'
+
+class App extends Component{
+  componentWillMount() {
     this.createLock();
     this.setupAjax();
     this.setState(this.getState())
-  },
+  }
 
-  createLock: function() {
+  createLock() {
     this.lock = new Auth0Lock(this.props.clientId, this.props.domain);
-  },
+  }
 
-  setupAjax: function() {
+  setupAjax() {
     var profile = this.getState() || {};
     if (profile.id_token)
     {
@@ -20,9 +25,9 @@ var App = React.createClass({
         }
       });
     }
-  },
+  }
 
-  getState: function() {
+  getState() {
     var state;
     var authHash = this.lock.parseHash(window.location.hash);
     if (authHash) {
@@ -33,12 +38,17 @@ var App = React.createClass({
       }
     }
     return state;
-  },
+  }
 
-  render: function() {
+  render() {
     if (this.state.profile)
-      return <LoggedIn lock={this.lock} profile={this.state.profile} {...this.props} />;
+      return <Form lock={this.lock} profile={this.state.profile} {...this.props} />;
     else
       return <Home lock={this.lock} {...this.props} />;
   }
-});
+}
+
+ReactDOM.render(
+  <App clientId={AUTH0_CLIENT_ID} domain={AUTH0_DOMAIN} apiUrl={apiUrl} connection={AUTH0_CONNECTION}/>,
+  document.getElementById('content')
+);
